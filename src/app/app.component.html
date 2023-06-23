@@ -1,0 +1,9 @@
+<div style="padding: 10px;" #topdiv>
+  <h2>Welcome to tldraw in Angular</h2>
+  <mat-slide-toggle color="primary" [checked]="darkmode" (click)="setDarkMode()">
+    Dark mode
+  </mat-slide-toggle>
+  &nbsp;<button mat-raised-button color="primary" (click)="Save()">Save</button>
+  &nbsp;<button mat-raised-button (click)="Load()">Load</button>
+</div>
+<div class="tldrawcontainer" [ngStyle]="tldrawheight" [reactComponent]="Tldraw" [props]="props">
