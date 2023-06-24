@@ -57,9 +57,7 @@ export class AppComponent implements OnDestroy, AfterViewInit {
   }
 
   handleMount(app: Editor) {
-    this.appsvc.app = app;
-    (<any>app)['appsvc'] = this.appsvc;
-    this.appsvc.load();
+    this.appsvc.setApp(app);
   }
 
   @HostListener('window:resize', [])

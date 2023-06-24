@@ -3,19 +3,28 @@ import { MatDialog } from '@angular/material/dialog';
 import { Editor, createShapeId } from '@tldraw/editor';
 import { LocalStorageService } from 'ngx-webstorage';
 import { HelloDialogComponent } from '../components/hellodialog/hellodialog.component';
+import { HistoryEntry } from '@tldraw/store';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TlappService {
-  public app!: Editor;
+  private app!: Editor;
 
   constructor(
     private localSt: LocalStorageService,
     private dialog: MatDialog
   ) {}
 
+  setApp(app: Editor) {
+    this.app = app;
+    this.app.on('change', this.HandleChangeEvent, this);
+    (<any>app)['appsvc'] = this;
+    this.load();
+  }
+
   public Dispose() {
+    this.app?.off('change', this.HandleChangeEvent, this);
     this.app?.dispose();
   }
 
@@ -60,6 +69,7 @@ export class TlappService {
         },
       },
     };
+
     this.app?.batch(() => {
       this.app?.createShapes([newshape, arrow]);
       this.app?.select(newshape.id);
@@ -131,5 +141,39 @@ export class TlappService {
         this.shapeChanged.emit(shape.id);
       }
     });
+  }
+
+  private HandleChangeEvent(change: HistoryEntry<any>) {
+    if (change.source === 'user') {
+      // Added
+      for (const record of Object.values(change.changes.added)) {
+        if (record.type === 'state') {
+          // this.StateAdded$.next(record);
+        }
+      }
+
+      // Updated
+      for (const [from, to] of Object.values(change.changes.updated)) {
+        if (from.typeName === 'shape' && to.typeName === 'shape') {
+          if (to.type === 'state') {
+            // this.StateUpdated$.next(to);
+          }
+        }
+      }
+
+      // Removed
+      for (const record of Object.values(change.changes.removed)) {
+        if (record.typeName === 'shape') {
+          if (record.type === 'state') {
+            const arrows = this.app?.getArrowsBoundTo(record.id);
+            console.log('record', record);
+            console.log('arrows', arrows);
+            if (arrows) {
+              this.app?.deleteShapes(arrows.map((x) => x.arrowId));
+            }
+          }
+        }
+      }
+    }
   }
 }
